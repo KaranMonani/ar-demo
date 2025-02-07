@@ -1,11 +1,11 @@
 Model Information:
-* title:	Lowpoly Robots
-* source:	https://sketchfab.com/3d-models/lowpoly-robots-7181d9e5ba434aa59dc7b9042c9723df
-* author:	Satendra Saraswat (https://sketchfab.com/satendra5286)
+* title:	Sofa unfolding animation
+* source:	https://sketchfab.com/3d-models/sofa-unfolding-animation-8a2e8ea27e6d40f0b3776cbe3a7d6101
+* author:	tomkranis (https://sketchfab.com/tomkranis)
 
 Model License:
 * license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
 * requirements:	Author must be credited. Commercial use is allowed.
 
 If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
-This work is based on "Lowpoly Robots" (https://sketchfab.com/3d-models/lowpoly-robots-7181d9e5ba434aa59dc7b9042c9723df) by Satendra Saraswat (https://sketchfab.com/satendra5286) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+This work is based on "Sofa unfolding animation" (https://sketchfab.com/3d-models/sofa-unfolding-animation-8a2e8ea27e6d40f0b3776cbe3a7d6101) by tomkranis (https://sketchfab.com/tomkranis) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
