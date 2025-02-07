@@ -34,7 +34,7 @@
 
     // Load GLTF Model
     const loader = new THREE.GLTFLoader();
-    loader.load('your-model.glb', (gltf) => {
+    loader.load('./models/scene.gltf', (gltf) => {
       const model = gltf.scene;
       scene.add(model);
       model.scale.set(0.1, 0.1, 0.1);
