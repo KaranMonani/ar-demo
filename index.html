@@ -2,15 +2,90 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>A-Frame GLTF Animation Test</title>
-  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <title>Three.js and AR.js Webcam + GLTF</title>
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script> <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <script src="https://threejs.org/build/three.min.js"></script>
+  <script src="https://threejs.org/examples/js/loaders/GLTFLoader.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; }
+  </style>
 </head>
 <body>
-  <a-scene>
-    <a-assets>
-      <a-asset-item id="model" src="models/scene.gltf"></a-asset-item>
-    </a-assets>
-    <a-entity gltf-model="#model"></a-entity>
-  </a-scene>
+  <script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Webcam Background
+    const video = document.createElement('video');
+    video.autoplay = true;
+    video.loop = true;
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+        const texture = new THREE.VideoTexture(video);
+        scene.background = texture; // Set webcam as background
+      })
+      .catch(error => console.error('Error accessing webcam:', error));
+
+    // Load GLTF Model
+    const loader = new THREE.GLTFLoader();
+    loader.load('./models/scene.gltf', (gltf) => {
+      const model = gltf.scene;
+
+      // Check for animations and play them (Important!)
+      if (gltf.animations && gltf.animations.length > 0) {
+        const mixer = new THREE.AnimationMixer(model);
+        gltf.animations.forEach(animation => {
+          mixer.clipAction(animation).play();
+        });
+
+        // Animation Loop
+        function animate() {
+          requestAnimationFrame(animate);
+          mixer.update(0.016); // Delta time (adjust as needed)
+          renderer.render(scene, camera);
+        }
+
+        animate();
+      }
+      scene.add(model);
+      model.scale.set(0.1, 0.1, 0.1); // Adjust scale
+      model.position.set(0, 0, -2); // Adjust position
+    }, (xhr) => {
+        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+    }, (error) => {
+        console.error('An error happened loading the model.', error);
+    });
+
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(1, 1, 1);
+    scene.add(directionalLight);
+
+    camera.position.z = 5; // Adjust camera position
+
+    // Render loop
+    function render() {
+      requestAnimationFrame(render);
+      renderer.render(scene, camera);
+    }
+    render();
+
+
+    // Resize handling
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+  </script>
 </body>
 </html>
