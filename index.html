@@ -28,34 +28,41 @@
       .then(stream => {
         video.srcObject = stream;
         const texture = new THREE.VideoTexture(video);
-        scene.background = texture; // Set webcam as background
+        scene.background = texture;
       })
       .catch(error => console.error('Error accessing webcam:', error));
 
     // Load GLTF Model
     const loader = new THREE.GLTFLoader();
-    loader.load('./models/scene.gltf', (gltf) => {
+    loader.load('your-model.glb', (gltf) => {
       const model = gltf.scene;
+      scene.add(model);
+      model.scale.set(0.1, 0.1, 0.1);
+      model.position.set(0, 0, -2);
 
-      // Check for animations and play them (Important!)
-      if (gltf.animations && gltf.animations.length > 0) {
-        const mixer = new THREE.AnimationMixer(model);
-        gltf.animations.forEach(animation => {
-          mixer.clipAction(animation).play();
-        });
+      // Rotation animation (slower speed)
+      let rotationAngle = 0;
+      const rotationSpeed = 0.005; // Adjust this value to control speed
 
-        // Animation Loop
-        function animate() {
-          requestAnimationFrame(animate);
+      function animate() {
+        requestAnimationFrame(animate);
+
+        rotationAngle += rotationSpeed;
+        model.rotation.y = rotationAngle;
+
+        // Check for animations and play them (Important!)
+        if (gltf.animations && gltf.animations.length > 0) {
+          const mixer = new THREE.AnimationMixer(model);
+          gltf.animations.forEach(animation => {
+            mixer.clipAction(animation).play();
+          });
           mixer.update(0.016); // Delta time (adjust as needed)
-          renderer.render(scene, camera);
         }
 
-        animate();
+        renderer.render(scene, camera);
       }
-      scene.add(model);
-      model.scale.set(1, 1, 1); // Adjust scale
-      model.position.set(0, 0, -2); // Adjust position
+
+      animate();
     }, (xhr) => {
         console.log((xhr.loaded / xhr.total * 100) + '% loaded');
     }, (error) => {
@@ -69,21 +76,16 @@
     directionalLight.position.set(1, 1, 1);
     scene.add(directionalLight);
 
-    camera.position.z = 5; // Adjust camera position
+    camera.position.z = 5;
 
-    // Render loop
-    function render() {
-      requestAnimationFrame(render);
-      renderer.render(scene, camera);
-    }
-    render();
-
+    // Render loop (no longer needed separately)
+    // function render() { ... } is now inside the animate function
 
     // Resize handling
     window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
   </script>
