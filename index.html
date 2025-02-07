@@ -1,91 +1,104 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Simple WebAR Model</title>
+<head>
+    <title>WebAR Model with Fallback</title>
     <style>
-      body {
-        margin: 0;
-      }
-      canvas {
-        display: block;
-      }
+        body { margin: 0; }
+        canvas { display: block; }
+        #video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1; /* Place video behind the canvas */
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/loaders/GLTFLoader.js"></script>
-  </head>
-  <body>
-    <script>
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(
-        70,
-        window.innerWidth / window.innerHeight,
-        0.1,
-        1000
-      );
-      const renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      document.body.appendChild(renderer.domElement);
-      renderer.xr.enabled = true;
+</head>
+<body>
+    <video id="video-background" style="display: none;"></video> <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+        renderer.xr.enabled = false; // Initialize WebXR to false for fallback mode
 
-      // Function to start the AR session
-      async function startAR() {
-        try {
-          const session = await navigator.xr.requestSession("immersive-ar", {
-            requiredFeatures: ["camera-access"],
-          });
-          renderer.xr.setSession(session);
+        const loader = new THREE.GLTFLoader();
+        let model; // Store the loaded model globally so both modes can access it
 
-          const video = document.createElement("video");
-          video.style.position = "fixed";
-          video.style.top = "0";
-          video.style.left = "0";
-          video.style.width = "100%";
-          video.style.height = "100%";
-          video.style.objectFit = "cover";
-          document.body.appendChild(video);
+        loader.load('/models/scene.gltf', function (gltf) { // **CHANGE 'path/to/your/model.glb'**
+            model = gltf.scene;
+            scene.add(model);
+            model.position.set(0, 0, -1.5);
+            model.scale.set(0.5, 0.5, 0.5);
 
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "environment" },
-          });
-          video.srcObject = stream;
-          await video.play();
+            // Initial camera position for non-AR mode (adjust as needed)
+            camera.position.z = 3;
 
-          renderer.setFramebuffer(null);
-          renderer.setClearColor(0x000000, 0);
-          renderer.xr.getCamera().layers = session.renderState.baseLayer
-            ? [session.renderState.baseLayer]
-            : [];
-
-          // Load a 3D model (replace 'path/to/your/model.glb' with the actual path)
-          const loader = new THREE.GLTFLoader();
-          loader.load(
-            "models/scene.gltf",
-            function (gltf) {
-              // <-- Updated path
-              const model = gltf.scene;
-              scene.add(model);
-              model.position.set(0, 0, -1.5);
-              model.scale.set(0.5, 0.5, 0.5);
-
-              renderer.setAnimationLoop(() => {
-                renderer.render(scene, renderer.xr.getCamera());
-              });
-            },
-            undefined,
-            function (error) {
-              console.error("An error happened loading the 3D model:", error);
-              alert("Failed to load 3D model. Check console for details.");
+            // Check if WebXR is supported and start AR if possible
+            if (navigator.xr) {
+                startAR(); // Try to start AR session, will fallback if fails
+            } else {
+                console.log("WebXR not supported on this device. Running in 3D model viewer mode.");
+                startNonARAnimation(); // Start standard 3D animation loop for non-AR mode
             }
-          );
-        } catch (error) {
-          console.error("AR Session failed:", error);
-          alert(
-            "AR Session failed to start. Make sure your device and browser support WebXR and camera access is allowed."
-          );
-        }
-      }
 
-      startAR();
+        }, undefined, function (error) {
+            console.error('An error happened loading the 3D model:', error);
+            alert('Failed to load 3D model. Check console for details.');
+        });
+
+        async function startAR() {
+            try {
+                renderer.xr.enabled = true; // Enable WebXR for AR mode only when session starts
+                const session = await navigator.xr.requestSession('immersive-ar', {
+                    requiredFeatures: ['camera-access']
+                });
+                renderer.xr.setSession(session);
+
+                const video = document.getElementById('video-background');
+                video.style.display = 'block'; // Show video element for AR background
+
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                video.srcObject = stream;
+                await video.play();
+
+                renderer.setFramebuffer(null);
+                renderer.setClearColor(0x000000, 0);
+                renderer.xr.getCamera().layers = session.renderState.baseLayer ? [session.renderState.baseLayer] : [];
+
+                renderer.setAnimationLoop(() => {
+                    renderer.render(scene, renderer.xr.getCamera()); // Use AR camera for rendering in AR mode
+                });
+
+            } catch (error) {
+                console.error("AR Session failed:", error);
+                alert("AR Session failed to start, falling back to 3D model viewer mode.");
+                renderer.xr.enabled = false; // Ensure WebXR is disabled for fallback mode
+                document.getElementById('video-background').style.display = 'none'; // Hide video element in fallback mode
+                startNonARAnimation(); // Fallback to standard 3D animation loop
+            }
+        }
+
+        function startNonARAnimation() {
+            function animate() {
+                requestAnimationFrame(animate);
+
+                // Example rotation for non-AR mode, adjust as needed
+                if (model) {
+                    model.rotation.y += 0.01;
+                }
+
+                renderer.render(scene, camera); // Use the initial perspective camera for non-AR rendering
+            }
+            animate();
+        }
+
     </script>
-  </body>
+
+</body>
 </html>
