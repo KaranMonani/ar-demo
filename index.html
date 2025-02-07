@@ -19,6 +19,7 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
+    // Webcam Background
     const video = document.createElement('video');
     video.autoplay = true;
     video.loop = true;
@@ -33,28 +34,36 @@
 
     // Load GLTF Model
     const loader = new THREE.GLTFLoader();
-    loader.load('./models/scene.gltf', (gltf) => {
+    loader.load('your-model.glb', (gltf) => {
       const model = gltf.scene;
       scene.add(model);
-      model.scale.set(1, 1, 1);
+      model.scale.set(0.1, 0.1, 0.1);
       model.position.set(0, 0, -2);
 
+
+      // Animation Speed (GLTF Animations) - Increased Speed
+      const mixer = new THREE.AnimationMixer(model);
+      const animationSpeed = 1.5; // Increased speed (1.5x) - Adjust as needed
+
+      if (gltf.animations && gltf.animations.length > 0) {
+        gltf.animations.forEach(animation => {
+          mixer.clipAction(animation).play();
+        });
+      }
+
+      // Rotation Speed (Same as before)
       let rotationAngle = 0;
-      const rotationSpeed = 0.005;
+      const rotationSpeed = 0.005; // Adjust this value if needed
 
       function animate() {
         requestAnimationFrame(animate);
 
+        // Update animation mixer with custom speed
+        const delta = 0.016;
+        mixer.update(delta * animationSpeed);
+
         rotationAngle += rotationSpeed;
         model.rotation.y = rotationAngle;
-
-        if (gltf.animations && gltf.animations.length > 0) {
-          const mixer = new THREE.AnimationMixer(model);
-          gltf.animations.forEach(animation => {
-            mixer.clipAction(animation).play();
-          });
-          mixer.update(0.16); 
-        }
 
         renderer.render(scene, camera);
       }
@@ -66,6 +75,7 @@
         console.error('An error happened loading the model.', error);
     });
 
+    // Lighting (Same as before)
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -74,6 +84,7 @@
 
     camera.position.z = 5;
 
+    // Resize handling (Same as before)
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
