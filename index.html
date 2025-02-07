@@ -19,7 +19,6 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // Webcam Background
     const video = document.createElement('video');
     video.autoplay = true;
     video.loop = true;
@@ -34,15 +33,14 @@
 
     // Load GLTF Model
     const loader = new THREE.GLTFLoader();
-    loader.load('your-model.glb', (gltf) => {
+    loader.load('./models/scene.gltf', (gltf) => {
       const model = gltf.scene;
       scene.add(model);
-      model.scale.set(0.1, 0.1, 0.1);
+      model.scale.set(1, 1, 1);
       model.position.set(0, 0, -2);
 
-      // Rotation animation (slower speed)
       let rotationAngle = 0;
-      const rotationSpeed = 0.005; // Adjust this value to control speed
+      const rotationSpeed = 0.005;
 
       function animate() {
         requestAnimationFrame(animate);
@@ -50,13 +48,12 @@
         rotationAngle += rotationSpeed;
         model.rotation.y = rotationAngle;
 
-        // Check for animations and play them (Important!)
         if (gltf.animations && gltf.animations.length > 0) {
           const mixer = new THREE.AnimationMixer(model);
           gltf.animations.forEach(animation => {
             mixer.clipAction(animation).play();
           });
-          mixer.update(0.016); // Delta time (adjust as needed)
+          mixer.update(0.016); 
         }
 
         renderer.render(scene, camera);
@@ -69,7 +66,6 @@
         console.error('An error happened loading the model.', error);
     });
 
-    // Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -78,10 +74,6 @@
 
     camera.position.z = 5;
 
-    // Render loop (no longer needed separately)
-    // function render() { ... } is now inside the animate function
-
-    // Resize handling
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
