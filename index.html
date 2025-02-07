@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple WebAR Model</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/loaders/GLTFLoader.js"></script>
+  </head>
+  <body>
+    <script>
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(
+        70,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+      renderer.xr.enabled = true;
+
+      // Function to start the AR session
+      async function startAR() {
+        try {
+          const session = await navigator.xr.requestSession("immersive-ar", {
+            requiredFeatures: ["camera-access"],
+          });
+          renderer.xr.setSession(session);
+
+          const video = document.createElement("video");
+          video.style.position = "fixed";
+          video.style.top = "0";
+          video.style.left = "0";
+          video.style.width = "100%";
+          video.style.height = "100%";
+          video.style.objectFit = "cover";
+          document.body.appendChild(video);
+
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" },
+          });
+          video.srcObject = stream;
+          await video.play();
+
+          renderer.setFramebuffer(null);
+          renderer.setClearColor(0x000000, 0);
+          renderer.xr.getCamera().layers = session.renderState.baseLayer
+            ? [session.renderState.baseLayer]
+            : [];
+
+          // Load a 3D model (replace 'path/to/your/model.glb' with the actual path)
+          const loader = new THREE.GLTFLoader();
+          loader.load(
+            "models/scene.gltf",
+            function (gltf) {
+              // <-- Updated path
+              const model = gltf.scene;
+              scene.add(model);
+              model.position.set(0, 0, -1.5);
+              model.scale.set(0.5, 0.5, 0.5);
+
+              renderer.setAnimationLoop(() => {
+                renderer.render(scene, renderer.xr.getCamera());
+              });
+            },
+            undefined,
+            function (error) {
+              console.error("An error happened loading the 3D model:", error);
+              alert("Failed to load 3D model. Check console for details.");
+            }
+          );
+        } catch (error) {
+          console.error("AR Session failed:", error);
+          alert(
+            "AR Session failed to start. Make sure your device and browser support WebXR and camera access is allowed."
+          );
+        }
+      }
+
+      startAR();
+    </script>
+  </body>
+</html>
