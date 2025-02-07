@@ -1,93 +1,23 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>Web AR - Demo</title>
-  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script> <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-  <script src="https://threejs.org/build/three.min.js"></script>
-  <script src="https://threejs.org/examples/js/loaders/GLTFLoader.js"></script>
-  <style>
-    body { margin: 0; overflow: hidden; }
-    canvas { display: block; }
-  </style>
-</head>
-<body>
-  <script>
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-
-    const video = document.createElement('video');
-    video.autoplay = true;
-    video.loop = true;
-
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } })
-      .then(stream => {
-        video.srcObject = stream;
-        const texture = new THREE.VideoTexture(video);
-        scene.background = texture;
-      })
-      .catch(error => console.error('Error accessing webcam:', error));
-
-    const loader = new THREE.GLTFLoader();
-    loader.load('./models/scene.gltf', (gltf) => {
-      const model = gltf.scene;
-      scene.add(model);
-      model.scale.set(1, 1, 1);
-
-      const box = new THREE.Box3().setFromObject(model);
-      const center = new THREE.Vector3();
-      box.getCenter(center);
-      model.position.x = -center.x;
-      model.position.y = -center.y;
-      model.position.z = -2;
-
-      const mixer = new THREE.AnimationMixer(model);
-      const animationSpeed = 1;
-
-      if (gltf.animations && gltf.animations.length > 0) {
-        gltf.animations.forEach(animation => {
-          mixer.clipAction(animation).play();
-        });
+  <head>
+    <meta charset="utf-8" />
+    <title>AR PROD Demo</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://threejs.org/build/three.min.js"></script>
+    <script src="https://threejs.org/examples/js/loaders/GLTFLoader.js"></script>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
       }
-
-      let rotationAngle = 0;
-      const rotationSpeed = 0.005;
-
-      function animate() {
-        requestAnimationFrame(animate);
-        const delta = 0.016;
-        mixer.update(delta * animationSpeed);
-
-        rotationAngle += rotationSpeed;
-        model.rotation.y = rotationAngle;
-
-        renderer.render(scene, camera);
+      canvas {
+        display: block;
       }
-
-      animate();
-    }, (xhr) => {
-        console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-    }, (error) => {
-        console.error('An error happened loading the model.', error);
-    });
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(1, 1, 1);
-    scene.add(directionalLight);
-    camera.position.y = 2;
-    camera.position.z = 5;
-
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-  </script>
-</body>
+    </style>
+  </head>
+  <body>
+    <script src="./script.js"></script>
+  </body>
 </html>
